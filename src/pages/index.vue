@@ -1,5 +1,4 @@
-<script setup lang="ts">
-</script>
-<template>
-    test
-</template>
+<route lang="yaml">
+    redirect:
+      /logic/designer
+  </route>
