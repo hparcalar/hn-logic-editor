@@ -3,8 +3,7 @@ import App from './App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { setupLayouts } from 'virtual:generated-layouts'
 import generatedRoutes from 'virtual:generated-pages'
-import VueDraggableResizable from 'vue-draggable-resizable';
-import 'vue-draggable-resizable/dist/VueDraggableResizable.css'
+import VueResizable from 'vue-resizable';
 import 'virtual:windi.css';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.min.js'
@@ -20,6 +19,6 @@ const router = createRouter({
 });
 
 const app = createApp(App)
-    .component('vue-draggable-resizable', VueDraggableResizable)
+    .component('vue-resizable', VueResizable)
     .use(router)
     .mount('#app')
