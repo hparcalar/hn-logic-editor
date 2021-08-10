@@ -22,11 +22,11 @@
     }
 
     onMounted(() => {
-        LeaderLine.setLine(
-            document.getElementById('dg1'),
-            document.getElementById('dg2'),
-            {color:'blue', size:2}
-        );
+        // LeaderLine.setLine(
+        //     document.getElementById('dg1'),
+        //     document.getElementById('dg2'),
+        //     {color:'blue', size:2}
+        // );
     });
     
 </script>

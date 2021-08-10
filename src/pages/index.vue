@@ -1,4 +1,4 @@
 <route lang="yaml">
     redirect:
-      /logic/designer
+      /logic/programmer
   </route>

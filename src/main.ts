@@ -10,6 +10,7 @@ import 'bootstrap/dist/js/bootstrap.min.js'
 import 'vue-sidebar-menu/dist/vue-sidebar-menu.css';
 import 'font-awesome/css/font-awesome.min.css';
 import './styles/layout-pages.css';
+import './styles/components.css';
 
 const routes = setupLayouts(generatedRoutes)
 

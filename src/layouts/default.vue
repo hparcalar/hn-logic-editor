@@ -19,6 +19,11 @@ const menu = reactive([
     icon: 'fa fa-sitemap',
   },
   {
+    href: '/logic/programmer',
+    title: 'Logic Programmer',
+    icon: 'fa fa-edit',
+  },
+  {
     href: '/logic/list',
     title: 'Templates',
     icon: 'fa fa-list-alt',
