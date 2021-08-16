@@ -6,6 +6,8 @@
     import VModalForm from './base/VModalForm.vue';
     import VFormText from './base/VFormText.vue';
     import { LogicService } from '../services/logic.service';
+    import VFormNumber from './base/VFormNumber.vue';
+    import VFormCheck from './base/VFormCheck.vue';
 
     const logicService: LogicService = new LogicService();
 
@@ -41,10 +43,14 @@
             formData.value.hnAppId = props.hnAppId;
         }
         else
-            formData.value = { hnProcessId:-1, name: '', isActive:true, hnAppId:props.hnAppId, steps: [] };
+            formData.value = { hnProcessId:-1, name: '', canRepeat: true,
+            delayAfter:0, delayBefore:0, liveCondition: '',
+            isActive:true, hnAppId:props.hnAppId, steps: [] };
     });
 
-    const formData: Ref<ProcessModel> = ref({ hnProcessId:-1, hnAppId:props.hnAppId, isActive: true, name:'', steps: [] });
+    const formData: Ref<ProcessModel> = ref({ hnProcessId:-1, hnAppId:props.hnAppId, canRepeat: true,
+            delayAfter:0, delayBefore:0,
+            isActive: true, name:'', liveCondition: '', steps: [] });
 
     const onSubmit = async() => {
         formData.value.hnAppId = props.hnAppId;
@@ -74,6 +80,34 @@
           :label="'Process Name'"
           :required="true"
         />
+    
+    <div class="grid grid-cols-12">
+        <VFormNumber
+            v-model="formData.delayBefore"
+            :label="'Delay (Before)'"
+            :required="true"
+            class="col-span-3"
+        />
+        <VFormNumber
+            v-model="formData.delayAfter"
+            :label="'Delay (After)'"
+            :required="true"
+            class="col-span-3"
+        />
+        <VFormText
+            v-model="formData.liveCondition"
+            :label="'Live Condition'"
+            :required="true"
+            class="col-span-4"
+        />
+        <VFormCheck
+            v-model="formData.canRepeat"
+            :label="'Can Repeat'"
+            :required="true"
+            class="col-span-2"
+        />
+    </div>
+    
   </VModalForm>
 </template>
 <style lang="postcss" scoped>

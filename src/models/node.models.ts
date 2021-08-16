@@ -9,23 +9,34 @@ export interface ProcessModel {
     isActive: boolean
     name: string
     hnAppId: number
+    delayBefore: number
+    delayAfter: number
+    canRepeat: boolean
     steps: ProcessStepModel[]
+    procStatus: number
+    liveCondition: string
 }
 
 export interface ProcessStepModel {
-    ProcessStepId: number
-    Explanation: string
-    Comparison: string
-    ResultAction: string
-    DelayBefore: number | null
-    DelayAfter: number | null
-    HnProcessId: number
+    processStepId: number
+    explanation: string
+    comparison: string
+    resultAction: string
+    orderNo : number
+    delayBefore: number
+    delayAfter: number
+    hnProcessId: number
+    isTestResult: boolean
+    waitUntilConditionRealized: boolean
+    conditionRealizeTimeout: number
 }
 
 export interface ProcessResultModel {
-    Id: number
-    ProcessStepId: number
-    StrResult: string
-    NumResult: number | null
-    CreatedDate: string
+    id: number
+    processStepId: number
+    strResult: string
+    numResult: number | null
+    durationInSeconds: number
+    createdDate: string
+    isOk: boolean | null
 }

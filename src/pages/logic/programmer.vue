@@ -6,6 +6,7 @@
     import { LogicService } from '../../services/logic.service';
     import AppForm from '../../components/AppForm.vue';
     import ProcessForm from '../../components/ProcessForm.vue';
+    import StepForm from '../../components/StepForm.vue';
 
     const logicService: LogicService = new LogicService();
 
@@ -46,17 +47,26 @@
                 processList.value.push(d);
             });
         }
+
+        selectedProcessId.value = -1;
     }
 
     const onSelectedAppChanged = async() => {
         appModel.value = appList.value.find(d => d.hnAppId === selectedAppId.value);
         await loadProcessList();
+        await loadProcessModel();
     }
 
     const onSelectedProcessChanged = () => {
-        processModel.value = processList.value.find(d => d.hnProcessId === selectedProcessId.value);
+        loadProcessModel();
     }
     
+    const loadProcessModel = async() => {
+        processModel.value = await logicService.getProcess(selectedProcessId.value);
+        if (!processModel.value)
+            processModel.value = { steps: [] };
+    }
+
     //#region APP FORM EVENTS
     const onAppFormClosed = () => {
         appFormVisible.value = false;
@@ -108,7 +118,29 @@
 
     //#region STEP EVENTS
     const editStep = (id: number) => {
+        if (selectedProcessId.value <= 0){
+            alert('First you have to select a process.');
+            return;
+        }
+        
+        if (id == -1)
+            selectedStepId.value = -1;
+        else
+            selectedStepId.value = id;
 
+        stepFormVisible.value = true;
+    }
+
+    const removeStep = async(id: number) => {
+        if (confirm('Are you sure to remove this step?')){
+            const stepData: ProcessStepModel = processModel.value.steps.find(d => d.processStepId == id);
+            processModel.value.steps.splice(
+                processModel.value.steps.indexOf(stepData),
+                1
+            );
+
+            await logicService.saveProcess(processModel.value);
+        }
     }
 
     const onStepFormClosed = () => {
@@ -117,6 +149,7 @@
 
     const onStepSubmit = () => {
         stepFormVisible.value = false;
+        loadProcessModel();
     }
 
     const onStepCancel = () => {
@@ -188,7 +221,26 @@
                         Create Step
                     </button>
                     <div class="flex flex-col">
-                        <div v-for="item in processModel.steps" :key="item.ProcessStepId">1</div>
+                        <div class="step-container" v-for="item in processModel.steps" :key="item.processStepId">
+                            <h6>
+                                <b>{{item.orderNo}} - </b>
+                                {{item.explanation}}
+                                <button 
+                                    @click="editStep(item.processStepId)"
+                                    class="py-0 px-1 bg-blue-100 border-1 border-blue-500 text-blue-500">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button 
+                                    @click="removeStep(item.processStepId)"
+                                    class="py-0 ml-1 px-1 bg-red-100 border-1 border-red-500 text-red-500">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </h6>
+                            <p><b>Condition</b>: {{item.comparison}}</p>
+                            <p><b>Action</b>: {{item.resultAction}}</p>
+                            <p><b>Delay Before</b>: {{item.delayBefore}} ms</p>
+                            <p><b>Delay After</b>: {{item.delayAfter}} ms</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -213,6 +265,16 @@
       @after-close="onProcessFormClosed"
     >
     </ProcessForm>
+
+    <StepForm
+      :visible="stepFormVisible"
+      :record-id="selectedStepId"
+      :hn-process-id="selectedProcessId"
+      @submit="onStepSubmit"
+      @cancel="onStepCancel"
+      @after-close="onStepFormClosed"
+    >
+    </StepForm>
 </template>
 <style lang="postcss" scoped>
 .toolbar {
@@ -226,6 +288,16 @@
     & img{
         height:32px;
         display: inline;
+    }
+}
+
+.step-container {
+    @apply p-2 my-1 border-1 border-blue-500 bg-blue-50 text-blue-500;
+    p {
+        @apply p-1 text-left my-0;
+    }
+    h6 {
+        @apply text-left p-2 bg-yellow-50 text-yellow-500 border-1 border-yellow-500;
     }
 }
 
