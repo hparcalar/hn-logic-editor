@@ -26,6 +26,11 @@ export class LogicService {
     return data;
   }
 
+  async getProcessesByApp(appId: number) {
+    const data = await this.apiObject.getAll('Apps/' + appId + '/process');
+    return data;
+  }
+
   async getProcess(id: number) {
     const data = await this.apiObject.get('Process', id);
     return data;
@@ -37,8 +42,18 @@ export class LogicService {
   // #endregion
 
   // #region RESULTS DATA
-  async getResults() {
-    const data = await this.apiObject.getAll('Results');
+  async getResults(appId: number) {
+    const data = await this.apiObject.getAll('Results/App/' + appId);
+    return data;
+  }
+
+  async getResultsByProcess(procId: number) {
+    const data = await this.apiObject.getAll('Results/Process/' + procId);
+    return data;
+  }
+
+  async getLastResult(procId: number) {
+    const data = await this.apiObject.get('Results/LastResult', procId);
     return data;
   }
 

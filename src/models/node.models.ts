@@ -39,4 +39,5 @@ export interface ProcessResultModel {
     durationInSeconds: number
     createdDate: string
     isOk: boolean | null
+    isTestResult: boolean
 }

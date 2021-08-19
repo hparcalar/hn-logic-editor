@@ -1,21 +1,102 @@
 <script setup lang="ts">
-    import { computed, ref, onMounted, defineProps, defineEmit } from 'vue';
+    import { computed, ref, onMounted, defineProps, defineEmit, watch, reactive } from 'vue';
     import type { Ref } from 'vue';
     import { asyncComputed } from '@vueuse/core';
-    import type { AppModel, ProcessModel } from '../models/node.models';
+    import type { AppModel, ProcessModel, ProcessResultModel } from '../models/node.models';
     import VModalForm from './base/VModalForm.vue';
     import VFormText from './base/VFormText.vue';
     import { LogicService } from '../services/logic.service';
     import VFormNumber from './base/VFormNumber.vue';
     import VFormCheck from './base/VFormCheck.vue';
     import Vue3ChartJs from "@j-t-mcc/vue3-chartjs";
+    import moment from 'moment';
 
     const logicService: LogicService = new LogicService();
 
-    const appModel = ref({ appName:'Test Dashboard' });
-    const testModel = ref({ status:'Test Tamamlandı', result: true });
+    const selectedAppId = ref(-1);
+    const selectedProcId = ref(-1);
 
-    const barChart = ref({
+    const appList = ref([]);
+    const procList = ref([]);
+
+    const lastViewedResultId = 0;
+    const lastResult = ref({ id:0 });
+
+    const selectApp = (appId: number) => {
+      selectedAppId.value = appId;
+      selectedProcId.value = -1;
+      loadProcesses();
+    }
+
+    const selectProc = (procId: number) => {
+      selectedProcId.value = procId;
+      loadResultData();
+    }
+
+    const appModel = computed(() => { 
+      const foundApp = appList.value.find(d => d.hnAppId == selectedAppId.value);
+      if (foundApp)
+        return foundApp;
+      
+      return { appName: 'Dashboard' }
+    });
+
+    const procModel = computed(() => {
+      const foundProc = procList.value.find(d => d.hnProcessId == selectedProcId.value);
+      if (foundProc)
+        return foundProc;
+
+      return { name: '', procStatus: 0 };
+    });
+
+    const procStatus = ref(0);
+
+    const testModel = ref({ status:'Test Bekleniyor', statusNo:0, result: true });
+    const testStatus = computed(() => procStatus.value == 0 ? 'Yeni Test Bekleniyor' : 'Test Yapılıyor');
+    const testImage = computed(() => {
+      if (procStatus.value == 0){
+        if (lastResult.value.id > 0 && lastResult.value.CreatedDate){
+          if (moment(lastResult.value.CreatedDate) > moment().subtract(3, 'seconds'))
+            return lastResult.value.isOk == true ? 'test_ok.png' : 'test_nok.png';
+        }
+        
+        return 'test_waiting.png';
+      }
+      else
+        return 'test_processing.gif';
+    })
+
+    const testResults = ref([]);
+
+    const okCount = computed(() => testResults.value.filter(d => d.isOk == true).length);
+    const nokCount = computed(() => testResults.value.filter(d => d.isOk == false).length);
+    
+    const dailyOkCount = computed(() => {
+      return testResults.value
+        .filter(d => moment(d.CreatedDate).format('DDMMYYYY') == moment().format('DDMMYYYY')
+          && d.isOk == true).length;
+    });
+
+    const dailyNokCount = computed(() => {
+      return testResults.value
+        .filter(d => moment(d.CreatedDate).format('DDMMYYYY') == moment().format('DDMMYYYY')
+          && d.isOk == false).length;
+    });
+
+    const weeklyOkCount = computed(() => {
+      return testResults.value
+        .filter(d => moment(d.CreatedDate) >= moment().subtract(7, 'days')
+          && d.isOk == true).length;
+    });
+
+    const weeklyNokCount = computed(() => {
+      return testResults.value
+        .filter(d => moment(d.CreatedDate) >= moment().subtract(7, 'days')
+          && d.isOk == false).length;
+    });
+
+    const chartRef = ref(null);
+    const barChart = reactive({
       type: "bar",
       height:250,
       options: {
@@ -45,19 +126,68 @@
           {
             label: "Test Sonuç Analizi",
             backgroundColor: ["#00ff00", "#ff0000"],
-            data: [40, 20],
+            data: [0, 0],
           },
         ],
       },
     });
 
+    const loadResultData = async() => {
+      const data: ProcessResultModel[] = await logicService.getResultsByProcess(selectedProcId.value);
+      if (data)
+        testResults.value = data.filter(d => d.isTestResult == true);
+    }
+
+    const loadApps = async() => {
+      const data = await logicService.getApps();
+      if (data)
+        appList.value = data;
+    }
+
+    const loadProcesses = async() => {
+      const data = await logicService.getProcessesByApp(selectedAppId.value);
+      if (data)
+        procList.value = data;
+    }
+
+    watch(
+    [
+        () => okCount.value,
+        () => nokCount.value,
+    ],
+    ([isVisible]) => {
+        barChart.data.datasets[0].data[0] = okCount.value * 1.0 / (okCount.value + nokCount.value) * 100;
+        barChart.data.datasets[0].data[1] = nokCount.value * 1.0 / (okCount.value + nokCount.value) * 100;
+        chartRef.value.update(200);
+    },
+    );
+
+    // ON LOAD EVENTS
+    onMounted(() => {
+      loadApps()
+
+      setInterval(async() => {
+        const data = await logicService.getLastResult(selectedProcId.value);
+        if (data)
+          lastResult.value = data;
+        const procData = await logicService.getProcess(selectedProcId.value);
+        if (procData)
+          procStatus.value = procData.procStatus;
+      }, 500);
+
+      setInterval(async() => {
+        await loadResultData();
+      }, 1000);
+    })
 </script>
 <template>
   <div class="flex justify-start items-center px-4 bg-white">
     <router-link to="/">
         <img src="/heka.jpeg" class="h-30">
     </router-link>
-    <span class="w-full text-left px-5 font-bold text-4xl text-shadow-sm">{{ appModel.appName }}</span>
+    <button class="w-full text-left px-5 font-bold text-4xl text-shadow-sm"
+      @click="selectedAppId = -1"
+    >{{ appModel.appName }} / {{ procModel.name }}</button>
   </div>
   <div class="flex flex-column h-full">
     <div class="flex flex-row h-1/2 border-t-1 border-gray-300">
@@ -65,10 +195,10 @@
         <div class="w-4/12 py-2 px-2 border-r-1 border-gray-300">
             <p class="py-1 px-1 border-1 border-blue-500 bg-blue-50 text-blue-500 text-xl uppercase font-bold">
                 <i class="fa fa-ok-sign"></i>
-                {{ testModel.status }}
+                {{ testStatus }}
             </p>
             <div class="items-center my-4">
-                <img :src="testModel.result == true ? 'test_ok.png' : 'test_nok.png'" class="h-20 mx-auto" >
+                <img :src="testImage" class="h-20 mx-auto" >
             </div>
         </div>
         <!-- CHART PANEL -->
@@ -77,7 +207,9 @@
                 <i class="fa fa-bar-chart"></i>
                 TEST GRAFİĞİ
             </p>
-            <vue3-chart-js class="mx-auto" v-bind="{ ...barChart }" />
+            <vue3-chart-js class="mx-auto" ref="chartRef" :type="barChart.type"
+        :data="barChart.data"
+        :options="barChart.options" />
         </div>
     </div>
     <div class="flex flex-row h-1/2">
@@ -119,31 +251,67 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
+                  <!-- <tr>
                     <td class="stats-category">Vardiya</td>
                     <td class="stats-table-ok">100</td>
                     <td class="stats-table-nok">5</td>
+                  </tr> -->
+                  <tr>
+                    <td class="stats-category">Bugün</td>
+                    <td class="stats-table-ok">{{dailyOkCount}}</td>
+                    <td class="stats-table-nok">{{dailyNokCount}}</td>
                   </tr>
                   <tr>
-                    <td class="stats-category">Gün</td>
-                    <td class="stats-table-ok">100</td>
-                    <td class="stats-table-nok">5</td>
+                    <td class="stats-category">Bu Hafta</td>
+                    <td class="stats-table-ok">{{weeklyOkCount}}</td>
+                    <td class="stats-table-nok">{{weeklyNokCount}}</td>
                   </tr>
                   <tr>
-                    <td class="stats-category">Hafta</td>
-                    <td class="stats-table-ok">100</td>
-                    <td class="stats-table-nok">5</td>
-                  </tr>
-                  <tr>
-                    <td class="stats-category">Ay</td>
-                    <td class="stats-table-ok">100</td>
-                    <td class="stats-table-nok">5</td>
+                    <td class="stats-category">Bu Ay</td>
+                    <td class="stats-table-ok">{{okCount}}</td>
+                    <td class="stats-table-nok">{{nokCount}}</td>
                   </tr>
                 </tbody>
             </table>
         </div>
     </div>
   </div>
+
+  <VModalForm
+    class="app-list-form"
+    :visible="selectedAppId == -1"
+    :title="'Choose Application'"
+    :description="''"
+    :width="500"
+    :isSubmitVisible="false"
+    :isCancelVisible="false"
+  >
+    <div class="flex flex-column space-y-2">
+      <button type="button" class="btn py-4 w-full" 
+        @click="selectApp(item.hnAppId)"
+        v-for="item in appList" :key="item.hnAppId">
+        {{ item.appName }}
+      </button>
+    </div>
+  </VModalForm>
+
+  <VModalForm
+    class="app-list-form"
+    :visible="selectedProcId == -1 && selectedAppId > -1"
+    :title="'Choose Process'"
+    :description="''"
+    :width="500"
+    :isSubmitVisible="false"
+    :isCancelVisible="false"
+  >
+    <div class="flex flex-column space-y-2">
+      <button type="button" class="btn py-4 w-full" 
+        @click="selectProc(item.hnProcessId)"
+        v-for="item in procList" :key="item.hnProcessId">
+        {{ item.name }}
+      </button>
+    </div>
+  </VModalForm>
 </template>
 <style lang="postcss" scoped>
   .stats-category {
