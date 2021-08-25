@@ -29,6 +29,7 @@ export interface ProcessStepModel {
     isTestResult: boolean
     waitUntilConditionRealized: boolean
     conditionRealizeTimeout: number
+    conditionSatisfiedTime: number
 }
 
 export interface ProcessResultModel {

@@ -126,6 +126,11 @@
         :label="'Condition'"
         :required="true"
     />
+    <VFormNumber
+          v-model="formData.conditionSatisfiedTime"
+          :label="'Satisfied Time(ms)'"
+          :required="false"
+        />
     <VFormText
           v-model="formData.resultAction"
           :label="'Result Action'"

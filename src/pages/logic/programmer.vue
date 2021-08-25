@@ -214,7 +214,7 @@
             </div>
 
             <!-- STEP EDITOR -->
-            <div class="flex-col flex-auto">
+            <div class="flex-col flex-auto h-full overflow-auto">
                 <div class="w-full h-full">
                     <button type="button" class="py-0 px-1 w-full bg-green-100 border-1 border-green-500 text-green-700"
                         @click="editStep(-1)">

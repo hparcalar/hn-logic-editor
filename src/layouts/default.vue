@@ -49,8 +49,8 @@ const menu = reactive([
 </script>
 <template>
      <sidebar-menu :menu="menu" @update:collapsed="onToggleCollapse" />
-     <div :class="[{ 'main-collapsed': asideEllapsed, 'main': !asideEllapsed }]">
-         <main ref="main">
+     <div :class="{ 'main-collapsed': asideEllapsed, 'main': !asideEllapsed }">
+         <main>
             <router-view />
          </main>
      </div>
