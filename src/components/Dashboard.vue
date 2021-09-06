@@ -1,6 +1,5 @@
 <script setup lang="ts">
     import { computed, ref, onMounted, defineProps, defineEmit, watch, reactive } from 'vue';
-    import type { Ref } from 'vue';
     import { asyncComputed } from '@vueuse/core';
     import type { AppModel, ProcessModel, ProcessResultModel } from '../models/node.models';
     import VModalForm from './base/VModalForm.vue';
@@ -52,19 +51,37 @@
     const procStatus = ref(0);
 
     const testModel = ref({ status:'Test Bekleniyor', statusNo:0, result: true });
-    const testStatus = computed(() => procStatus.value == 0 ? 'Yeni Test Bekleniyor' : 'Test Yapılıyor');
-    const testImage = computed(() => {
+
+    const testImage = () => {
       if (procStatus.value == 0){
-        if (lastResult.value.id > 0 && lastResult.value.CreatedDate){
-          if (moment(lastResult.value.CreatedDate) > moment().subtract(3, 'seconds'))
+        if (lastResult.value.id > 0 && lastResult.value.createdDate){
+          if (moment(lastResult.value.createdDate).diff(moment(new Date()), 'seconds') > -5)
+            // testModel.value.status = 'Test Tamamlandı';
             return lastResult.value.isOk == true ? 'test_ok.png' : 'test_nok.png';
         }
         
+        // testModel.value.status = 'Yeni Test Bekleniyor';
         return 'test_waiting.png';
       }
-      else
+      else{
+        // testModel.value.status = 'Test Yapılıyor'
         return 'test_processing.gif';
-    })
+      }
+    }
+
+    const testStatus = () => {
+      if (procStatus.value == 0){
+        if (lastResult.value.id > 0 && lastResult.value.createdDate){
+          if (moment(lastResult.value.createdDate).diff(moment(new Date()), 'seconds') > -5)
+            return 'Test Tamamlandı';
+        }
+        
+        return 'Yeni Test Bekleniyor';
+      }
+      else{
+        return 'Test Yapılıyor';
+      }
+    }
 
     const testResults = ref([]);
 
@@ -150,6 +167,42 @@
         procList.value = data;
     }
 
+    let lastLiveDate = moment(new Date());
+    let procLiveStatus = true;
+    let checkProcLiveStatus = false;
+    let conResetMessage = '';
+    let conResetDelay = 0;
+
+    const showResetMessage = () => {
+      try {
+        if(procLiveStatus == false)
+          return 'Bağlantı: Başarısız';
+        else{
+          if (checkProcLiveStatus == true) {
+            if (moment(new Date()).diff(lastLiveDate, 'seconds') >= conResetDelay){
+              setTimeout(() => { checkProcLiveStatus=false; }, 5000);
+              return conResetMessage;
+            }
+            else
+              return 'Bağlantı: Bekleniyor'
+          }
+          else{
+            return 'Bağlantı: OK'
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+
+      return '';
+    }
+
+    const liveMessage = ref('');
+
+    const deviceConnectionStatus = computed(() => {
+      return liveMessage.value.indexOf("OK") > -1;
+    })
+
     watch(
     [
         () => okCount.value,
@@ -171,8 +224,25 @@
         if (data)
           lastResult.value = data;
         const procData = await logicService.getProcess(selectedProcId.value);
-        if (procData)
+        
+        if (procData) {
           procStatus.value = procData.procStatus;
+
+          if (procLiveStatus != procData.isDeviceConnected){
+            if (procData.isDeviceConnected == true)
+              checkProcLiveStatus = true;
+            else
+              checkProcLiveStatus = false;
+
+            procLiveStatus = procData.isDeviceConnected;
+            conResetMessage = procData.connectionResetMessage;
+            conResetDelay = procData.connectionResetMessageDelay;
+
+            lastLiveDate = moment(new Date());
+          }
+
+          liveMessage.value = showResetMessage();
+        }
       }, 500);
 
       setInterval(async() => {
@@ -183,11 +253,12 @@
 <template>
   <div class="flex justify-start items-center px-4 bg-white">
     <router-link to="/">
-        <img src="/heka.jpeg" class="h-30">
+        <img src="/heka.jpeg" class="h-40 !w-120">
     </router-link>
     <button class="w-full text-left px-5 font-bold text-4xl text-shadow-sm"
       @click="selectedAppId = -1"
     >{{ appModel.appName }} / {{ procModel.name }}</button>
+    <span class="font-extrabold text-3xl w-full text-right" :class="deviceConnectionStatus ? 'text-green-500':'text-red-500'">{{ liveMessage }}</span>
   </div>
   <div class="flex flex-column h-full">
     <div class="flex flex-row h-1/2 border-t-1 border-gray-300">
@@ -195,10 +266,10 @@
         <div class="w-4/12 py-2 px-2 border-r-1 border-gray-300">
             <p class="py-1 px-1 border-1 border-blue-500 bg-blue-50 text-blue-500 text-xl uppercase font-bold">
                 <i class="fa fa-ok-sign"></i>
-                {{ testStatus }}
+                {{ testStatus() }}
             </p>
             <div class="items-center my-4">
-                <img :src="testImage" class="h-20 mx-auto" >
+                <img :src="testImage()" class="h-40 mx-auto" >
             </div>
         </div>
         <!-- CHART PANEL -->

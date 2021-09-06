@@ -12,6 +12,9 @@ export interface ProcessModel {
     delayBefore: number
     delayAfter: number
     canRepeat: boolean
+    isDeviceConnected: boolean
+    connectionResetMessage: string
+    connectionResetMessageDelay: number
     steps: ProcessStepModel[]
     procStatus: number
     liveCondition: string
@@ -22,11 +25,13 @@ export interface ProcessStepModel {
     explanation: string
     comparison: string
     resultAction: string
+    elseAction: string
     orderNo : number
     delayBefore: number
     delayAfter: number
     hnProcessId: number
     isTestResult: boolean
+    parallelAction: string
     waitUntilConditionRealized: boolean
     conditionRealizeTimeout: number
     conditionSatisfiedTime: number

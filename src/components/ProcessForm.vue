@@ -44,12 +44,12 @@
         }
         else
             formData.value = { hnProcessId:-1, name: '', canRepeat: true,
-            delayAfter:0, delayBefore:0, liveCondition: '',
+            delayAfter:0, delayBefore:0, liveCondition: '', connectionResetMessage: '', connectionResetMessageDelay: 5000,
             isActive:true, hnAppId:props.hnAppId, steps: [] };
     });
 
     const formData: Ref<ProcessModel> = ref({ hnProcessId:-1, hnAppId:props.hnAppId, canRepeat: true,
-            delayAfter:0, delayBefore:0,
+            delayAfter:0, delayBefore:0, connectionResetMessage: '', connectionResetMessageDelay: 5000,
             isActive: true, name:'', liveCondition: '', steps: [] });
 
     const onSubmit = async() => {
@@ -105,6 +105,22 @@
             :label="'Can Repeat'"
             :required="true"
             class="col-span-2"
+        />
+    </div>
+
+    <div class="grid grid-cols-12">
+        <VFormText
+          v-model="formData.connectionResetMessage"
+          :label="'Connection Err Message'"
+          :required="false"
+          class="col-span-6"
+        />
+
+        <VFormNumber
+            v-model="formData.connectionResetMessageDelay"
+            :label="'Error Message Delay (sn)'"
+            :required="true"
+            class="col-span-6"
         />
     </div>
     

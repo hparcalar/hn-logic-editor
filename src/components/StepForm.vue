@@ -75,7 +75,13 @@
             currentProcData.explanation = formData.value.explanation;
             currentProcData.comparison = formData.value.comparison;
             currentProcData.resultAction = formData.value.resultAction;
+            currentProcData.orderNo = formData.value.orderNo;
+            currentProcData.elseAction = formData.value.elseAction;
             currentProcData.delayBefore = parseInt(formData.value.delayBefore);
+            currentProcData.parallelAction = formData.value.parallelAction;
+            currentProcData.waitUntilConditionRealized = formData.value.waitUntilConditionRealized;
+            currentProcData.conditionRealizeTimeout = parseInt(formData.value.conditionRealizeTimeout);
+            currentProcData.conditionSatisfiedTime = parseInt(formData.value.conditionSatisfiedTime);
             currentProcData.delayAfter = parseInt(formData.value.delayAfter);
             currentProcData.isTestResult = formData.value.isTestResult;
         }
@@ -122,6 +128,11 @@
           :required="true"
         />
     <VFormText
+        v-model="formData.parallelAction"
+        :label="'Parallel Action'"
+        :required="true"
+    />
+    <VFormText
         v-model="formData.comparison"
         :label="'Condition'"
         :required="true"
@@ -136,6 +147,18 @@
           :label="'Result Action'"
           :required="true"
         />
+
+    <VFormText
+        v-model="formData.elseAction"
+        :label="'Else Action'"
+        :required="false"
+    />
+
+    <VFormNumber
+        v-model="formData.orderNo"
+        :label="'Order No'"
+        :required="false"
+    />
 
     <VFormCheck
         v-model="formData.isTestResult"

@@ -4,7 +4,7 @@
     
     </script>
     <template>
-      <main ref="main" class="h-full bg-gray-100 py-4">
+      <main class="h-full bg-gray-100 py-4">
         <router-view />
       </main>
     </template>

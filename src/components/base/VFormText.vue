@@ -19,7 +19,7 @@
       <div :class="['v-form-text', { disabled: props.disabled }, $attrs.class]">
         <transition name="v-form-shared__fade">
           <span
-            v-show="props.modelValue.length > 0"
+            
             class="v-form-shared__label v-form-text__label"
           >
             {{ props.label }}
