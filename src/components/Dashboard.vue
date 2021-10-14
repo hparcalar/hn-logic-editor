@@ -9,17 +9,21 @@
     import VFormCheck from './base/VFormCheck.vue';
     import Vue3ChartJs from "@j-t-mcc/vue3-chartjs";
     import moment from 'moment';
+import ItemSelection from './ItemSelection.vue';
 
     const logicService: LogicService = new LogicService();
 
     const selectedAppId = ref(-1);
     const selectedProcId = ref(-1);
+    const selectedItemId = ref(-1);
+    const selectedItemCode = ref('');
 
     const appList = ref([]);
     const procList = ref([]);
 
     const lastViewedResultId = 0;
     const lastResult = ref({ id:0 });
+    const lastPrintedId = ref(-1);
 
     const selectApp = (appId: number) => {
       selectedAppId.value = appId;
@@ -52,11 +56,35 @@
 
     const testModel = ref({ status:'Test Bekleniyor', statusNo:0, result: true });
 
+    const sendToPrinter = async(resultId) => {
+      try {
+        if (lastPrintedId.value == resultId)
+          return;
+
+        await logicService.addToPrintQueue({
+          printQueueId: 0,
+          itemId: selectedItemId.value,
+          itemCode: '',
+          isPrinted: false,
+          createdDate: moment().format('DD.MM.YYYY'),
+        });
+
+        lastPrintedId.value = resultId;
+      } catch (error) {
+        
+      }
+    }
+
     const testImage = () => {
       if (procStatus.value == 0){
         if (lastResult.value.id > 0 && lastResult.value.createdDate){
-          if (moment(lastResult.value.createdDate).diff(moment(new Date()), 'seconds') > -5)
-            // testModel.value.status = 'Test Tamamlandı';
+          // console.log(moment(new Date()).diff(moment(lastResult.value.createdDate), 'seconds'));
+          if (moment(new Date()).diff(moment(lastResult.value.createdDate), 'seconds') < 5)
+            
+            if (lastResult.value.isOk == true && lastPrintedId.value != lastResult.value.id){
+              sendToPrinter(lastResult.value.id);
+            }
+
             return lastResult.value.isOk == true ? 'test_ok.png' : 'test_nok.png';
         }
         
@@ -155,6 +183,13 @@
         testResults.value = data.filter(d => d.isTestResult == true);
     }
 
+    const loadItemData = async() => {
+      const data = await logicService.getItem(selectedItemId.value);
+      if (data){
+        selectedItemCode.value = data.itemCode;
+      }
+    }
+
     const loadApps = async() => {
       const data = await logicService.getApps();
       if (data)
@@ -191,7 +226,7 @@
           }
         }
       } catch (error) {
-        console.log(error);
+        
       }
 
       return '';
@@ -202,6 +237,15 @@
     const deviceConnectionStatus = computed(() => {
       return liveMessage.value.indexOf("OK") > -1;
     })
+
+    const onItemSelected = (item) => {
+      selectedItemId.value = item.itemId;
+      loadItemData();
+    }
+
+    const onItemCancelled = () => {
+
+    }
 
     watch(
     [
@@ -258,6 +302,9 @@
     <button class="w-full text-left px-5 font-bold text-4xl text-shadow-sm"
       @click="selectedAppId = -1"
     >{{ appModel.appName }} / {{ procModel.name }}</button>
+    <button class="w-full text-left px-5 font-bold text-4xl text-shadow-sm" @click="selectedItemId = -1">
+      <span class="text-blue-700">({{ selectedItemCode }})</span>
+    </button>
     <span class="font-extrabold text-3xl w-full text-right" :class="deviceConnectionStatus ? 'text-green-500':'text-red-500'">{{ liveMessage }}</span>
   </div>
   <div class="flex flex-column h-full">
@@ -347,6 +394,13 @@
         </div>
     </div>
   </div>
+
+  <ItemSelection 
+    :visible="selectedProcId > -1 && selectedItemId == -1"
+    :title="'Malzeme Seçimi'"
+    @submit="onItemSelected"
+    @cancel="onItemCancelled"
+  />
 
   <VModalForm
     class="app-list-form"

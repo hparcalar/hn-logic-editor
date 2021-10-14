@@ -1,4 +1,4 @@
-import { AppModel, ProcessModel, ProcessResultModel } from '../models/node.models';
+import { AppModel, ItemModel, PrintQueueModel, ProcessModel, ProcessResultModel } from '../models/node.models';
 import { ApiGeneric } from './base/api.generic';
 
 export class LogicService {
@@ -64,6 +64,28 @@ export class LogicService {
 
   async saveResult(model: ProcessResultModel) {
       return await this.apiObject.save('Results', model);
+  }
+  // #endregion
+
+  // #region ITEM DATA
+  async getItems() {
+    const data = await this.apiObject.getAll('Item');
+    return data;
+  }
+
+  async getItem(itemId: number) {
+    const data = await this.apiObject.getAll('Item/' + itemId);
+    return data;
+  }
+
+  async saveItem(model: ItemModel) {
+      return await this.apiObject.save('Item', model);
+  }
+  // #endregion
+
+  // #region PRINT QUEUE MANAGEMENT
+  async addToPrintQueue(model: PrintQueueModel) {
+      return await this.apiObject.save('Print', model);
   }
   // #endregion
 }

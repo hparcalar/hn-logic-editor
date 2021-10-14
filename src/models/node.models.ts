@@ -20,6 +20,21 @@ export interface ProcessModel {
     liveCondition: string
 }
 
+export interface ItemModel{
+    itemId: number
+    itemCode: string
+    itemName: string
+    isActive: boolean
+}
+
+export interface PrintQueueModel {
+    printQueueId: number
+    itemId: number | null
+    itemCode: string
+    isPrinted: boolean | null
+    createdDate: string
+}
+
 export interface ProcessStepModel {
     processStepId: number
     explanation: string
@@ -43,6 +58,7 @@ export interface ProcessResultModel {
     strResult: string
     numResult: number | null
     durationInSeconds: number
+    itemId: number | null
     createdDate: string
     isOk: boolean | null
     isTestResult: boolean
