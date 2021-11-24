@@ -61,15 +61,18 @@ import ItemSelection from './ItemSelection.vue';
         if (lastPrintedId.value == resultId)
           return;
 
+        if (selectedItemId.value <= 0)
+          return;
+
+        lastPrintedId.value = resultId;
+
         await logicService.addToPrintQueue({
           printQueueId: 0,
           itemId: selectedItemId.value,
           itemCode: '',
           isPrinted: false,
-          createdDate: moment().format('DD.MM.YYYY'),
+          createdDate: moment().format('YYYY-MM-DD'),
         });
-
-        lastPrintedId.value = resultId;
       } catch (error) {
         
       }
@@ -80,7 +83,7 @@ import ItemSelection from './ItemSelection.vue';
         if (lastResult.value.id > 0 && lastResult.value.createdDate){
           // console.log(moment(new Date()).diff(moment(lastResult.value.createdDate), 'seconds'));
           if (moment(new Date()).diff(moment(lastResult.value.createdDate), 'seconds') < 5)
-            
+            console.log(lastResult.value);
             if (lastResult.value.isOk == true && lastPrintedId.value != lastResult.value.id){
               sendToPrinter(lastResult.value.id);
             }
