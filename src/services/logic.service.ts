@@ -52,6 +52,11 @@ export class LogicService {
     return data;
   }
 
+  async getExcelOfProcess(procId: number) {
+    const data = await this.apiObject.getAll('Results/DataSheet/Process/' + procId);
+    return data;
+  }
+
   async getLastResult(procId: number) {
     const data = await this.apiObject.get('Results/LastResult', procId);
     return data;

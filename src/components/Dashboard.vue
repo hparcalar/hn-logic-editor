@@ -205,6 +205,37 @@ import ItemSelection from './ItemSelection.vue';
         procList.value = data;
     }
 
+    //#region EXCEL EXPORT DATA
+    const exportToExcel = async() => {
+      const bs64Str = await logicService.getExcelOfProcess(selectedProcId.value);
+      downloadFile(bs64Str);
+    }
+
+    const downloadFile = function (base64:any) {
+        let bytes = base64ToByteArray(base64);
+
+        let blob = new Blob([bytes], { type: "application/octet-stream" });
+        let link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+
+        let fileName = "simple.xlsx";
+        link.download = fileName;
+        link.click();
+    }
+
+    const base64ToByteArray = function (base64:any) {
+        let binaryString = window.atob(base64);
+        let len = binaryString.length;
+
+        let bytes = new Uint8Array(len);
+
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
+    //#endregion
+
     let lastLiveDate = moment(new Date());
     let procLiveStatus = true;
     let checkProcLiveStatus = false;
@@ -300,7 +331,7 @@ import ItemSelection from './ItemSelection.vue';
 <template>
   <div class="flex justify-start items-center px-4 bg-white">
     <router-link to="/">
-        <img src="/heka.jpeg" class="h-40 !w-120">
+        <img src="/heka.jpeg" class="h-30 !w-150">
     </router-link>
     <button class="w-full text-left px-5 font-bold text-4xl text-shadow-sm"
       @click="selectedAppId = -1"
@@ -338,20 +369,14 @@ import ItemSelection from './ItemSelection.vue';
         <div class="w-4/12 py-2 px-2 border-r-1 border-t-1 border-b-1 border-gray-300">
             <p class="py-1 px-1 border-1 border-blue-500 bg-blue-50 text-blue-500 text-xl uppercase font-bold">
                 <i class="fa fa-list"></i>
-                RAPORLAR
+                RAPOR
             </p>
             <div class="flex flex-col justify-center">
-                <button
+                <button @click="exportToExcel()"
                     class="border-1 font-bold py-5 w-1/2 mx-auto border-green-500 bg-green-50 text-green-500 px-4"
                     type="button">
                     <i class="fa fa-file-excel-o"></i>
                     EXCEL
-                </button>
-                <button
-                    class="border-1 font-bold py-5 w-1/2 mx-auto my-2 border-red-500 bg-red-50 text-red-500 px-4"
-                    type="button">
-                    <i class="fa fa-file-pdf-o"></i>
-                    PDF
                 </button>
             </div>
             
